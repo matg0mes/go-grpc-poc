@@ -6,73 +6,60 @@ import (
 	"github.com/google/uuid"
 )
 
-type Course struct {
+type Category struct {
 	db          *sql.DB
 	ID          string
 	Name        string
 	Description string
-	CategoryID  string
 }
 
-func NewCourse(db *sql.DB) *Course {
-	return &Course{db: db}
+func NewCategory(db *sql.DB) *Category {
+	return &Category{db: db}
 }
 
-func (c *Course) Create(name, description, categoryID string) (*Course, error) {
+func (c *Category) Create(name string, description string) (Category, error) {
 	id := uuid.New().String()
-	_, err := c.db.Exec("INSERT INTO courses (id, name, description, category_id) VALUES ($1, $2, $3, $4)",
-		id, name, description, categoryID)
+	_, err := c.db.Exec("INSERT INTO categories (id, name, description) VALUES ($1, $2, $3)",
+		id, name, description)
 	if err != nil {
-		return nil, err
+		return Category{}, err
 	}
-	return &Course{
-		ID:          id,
-		Name:        name,
-		Description: description,
-		CategoryID:  categoryID,
-	}, nil
+	return Category{ID: id, Name: name, Description: description}, nil
 }
 
-func (c *Course) FindAll() ([]Course, error) {
-	rows, err := c.db.Query("SELECT id, name, description, category_id FROM courses")
+func (c *Category) FindAll() ([]Category, error) {
+	rows, err := c.db.Query("SELECT id, name, description FROM categories")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	courses := []Course{}
+	categories := []Category{}
 	for rows.Next() {
-		var id, name, description, categoryID string
-		if err := rows.Scan(&id, &name, &description, &categoryID); err != nil {
+		var id, name, description string
+		if err := rows.Scan(&id, &name, &description); err != nil {
 			return nil, err
 		}
-		courses = append(courses, Course{ID: id, Name: name, Description: description, CategoryID: categoryID})
+		categories = append(categories, Category{ID: id, Name: name, Description: description})
 	}
-	return courses, nil
+	return categories, nil
 }
 
-func (c *Course) FindByCategoryID(categoryID string) ([]Course, error) {
-	rows, err := c.db.Query("SELECT id, name, description, category_id FROM courses WHERE category_id = $1", categoryID)
+func (c *Category) FindByCourseID(courseID string) (Category, error) {
+	var id, name, description string
+	err := c.db.QueryRow("SELECT c.id, c.name, c.description FROM categories c JOIN courses co ON c.id = co.category_id WHERE co.id = $1", courseID).
+		Scan(&id, &name, &description)
 	if err != nil {
-		return nil, err
+		return Category{}, err
 	}
-	defer rows.Close()
-	courses := []Course{}
-	for rows.Next() {
-		var id, name, description, categoryID string
-		if err := rows.Scan(&id, &name, &description, &categoryID); err != nil {
-			return nil, err
-		}
-		courses = append(courses, Course{ID: id, Name: name, Description: description, CategoryID: categoryID})
-	}
-	return courses, nil
+	return Category{ID: id, Name: name, Description: description}, nil
 }
 
-func (c *Course) Find(id string) (Course, error) {
-	var name, description, categoryID string
-	err := c.db.QueryRow("SELECT name, description, category_id FROM courses WHERE id = $1", id).
-		Scan(&name, &description, &categoryID)
+func (c *Category) Find(id string) (Category, error) {
+	var name, description string
+	err := c.db.QueryRow("SELECT name, description FROM categories WHERE id = $1", id).
+		Scan(&name, &description)
 	if err != nil {
-		return Course{}, err
+		return Category{}, err
 	}
-	return Course{ID: id, Name: name, Description: description, CategoryID: categoryID}, nil
+	return Category{ID: id, Name: name, Description: description}, nil
 }
