@@ -9,11 +9,13 @@ import (
 	"github.com/matg0mes/go-grpc-poc/internal/service"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
 
-	db, err := sql.Open("slite3", "./db.sqlite")
+	db, err := sql.Open("sqlite3", "./db.sqlite")
 
 	if err !=nil{
 		panic(err)
