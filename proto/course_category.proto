@@ -10,7 +10,7 @@ message Category {
     string description = 3;
 }
 
-message CreateCategoryResponse {
+message CreateCategoryRequest {
     string name = 2;
     string description = 3;
 }
@@ -24,7 +24,8 @@ message CategoryGetRequest{
 }
 
 service CategoryService {
-    rpc CreateCategory(CreateCategoryResponse) returns (Category) {}
+    rpc CreateCategory(CreateCategoryRequest) returns (Category) {}
+    rpc CreateCategoryStream(stream CreateCategoryRequest) returns (CategoryList) {}
     rpc ListCategories(blank) returns (CategoryList) {}
     rpc GetCategory(CategoryGetRequest) returns (Category) {}
 }
